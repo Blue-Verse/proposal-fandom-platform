@@ -1,0 +1,918 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="React Native 기반 글로벌 팬덤 플랫폼 개발 — 프로젝트 제안서" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link href="https://cdn.jsdelivr.net/gh/sun-typeface/SUIT@2/fonts/variable/woff2/SUIT-Variable.css" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['SUIT Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              600: '#0284c7',
+              700: '#0369a1'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 30px -18px rgba(15, 23, 42, 0.35)'
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root { color-scheme: light; font-size: 16px; }
+    body {
+      font-family: 'SUIT Variable', sans-serif;
+      font-size: 1rem;
+      background-image:
+        radial-gradient(circle at 12% 18%, rgba(14, 165, 233, 0.08), transparent 42%),
+        radial-gradient(circle at 88% 82%, rgba(2, 132, 199, 0.06), transparent 48%);
+    }
+    .doc-content h1, .doc-content h2, .doc-content h3, .doc-content h4 {
+      color: rgb(15 23 42); font-weight: 700; letter-spacing: -0.01em;
+      line-height: 1.3; margin-top: 1.6em; margin-bottom: 0.7em;
+    }
+    .doc-content h1 { font-size: 2rem; margin-top: 0.2em; }
+    .doc-content h2 { font-size: 1.4rem; }
+    .doc-content h3 { font-size: 1.15rem; }
+    .doc-content p, .doc-content li {
+      color: rgb(51 65 85); line-height: 1.8; font-size: 1rem;
+    }
+    .doc-content p, .doc-content ul, .doc-content ol,
+    .doc-content table, .doc-content pre, .doc-content blockquote {
+      margin-bottom: 1rem;
+    }
+    .doc-content ul, .doc-content ol { padding-left: 1.2rem; }
+    .doc-content ul { list-style: disc; }
+    .doc-content ol { list-style: decimal; }
+    .doc-content table {
+      width: 100%; border-collapse: collapse;
+      border: 1px solid rgb(226 232 240); border-radius: 0.75rem;
+      overflow: hidden; font-size: 1rem;
+    }
+    .doc-content th, .doc-content td {
+      border: 1px solid rgb(226 232 240); padding: 0.7rem 0.8rem;
+      text-align: left; vertical-align: top;
+    }
+    .doc-content th {
+      background: rgb(248 250 252); color: rgb(30 41 59); font-weight: 600;
+    }
+    .doc-content pre, .doc-content code {
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    .doc-content pre {
+      background: rgb(15 23 42); color: rgb(226 232 240);
+      padding: 1rem; border-radius: 0.75rem; overflow-x: auto;
+      font-size: 1rem; line-height: 1.65;
+    }
+    .doc-content p code, .doc-content li code,
+    .doc-content td code, .doc-content th code {
+      background: rgb(241 245 249); color: rgb(15 23 42);
+      border: 1px solid rgb(226 232 240); border-radius: 0.4rem;
+      padding: 0.08rem 0.4rem; font-size: 1em;
+    }
+    .doc-content blockquote {
+      border-left: 3px solid rgb(14 165 233); padding-left: 0.85rem;
+      color: rgb(71 85 105); background: rgb(240 249 255);
+      border-radius: 0.5rem; padding-top: 0.55rem; padding-bottom: 0.55rem;
+    }
+    .text-xs { font-size: 1rem !important; }
+    .timeline { position: relative; padding-left: 2rem; }
+    .timeline::before {
+      content: ''; position: absolute; left: 0.6rem; top: 0.25rem; bottom: 0.25rem;
+      width: 2px; background: rgb(186 230 253);
+    }
+    .timeline-item { position: relative; margin-bottom: 1.75rem; }
+    .timeline-item::before {
+      content: ''; position: absolute; left: -1.65rem; top: 0.35rem;
+      width: 0.75rem; height: 0.75rem; border-radius: 50%;
+      background: rgb(2 132 199); border: 3px solid rgb(224 242 254);
+    }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    #sidebar-backdrop { display: none; }
+    #sidebar-backdrop.open { display: block; }
+    @media (max-width: 1023px) {
+      #sidebar { transform: translateX(-100%); transition: transform 0.2s ease; position: fixed; top: 0; left: 0; z-index: 40; height: 100vh; width: 80vw; max-width: 320px; }
+      #sidebar.open { transform: translateX(0); }
+    }
+  </style>
+  <title>React Native 기반 글로벌 팬덤 플랫폼 개발 — 프로젝트 제안서</title>
+</head>
+<body class="text-slate-800 font-sans antialiased">
+  <div class="mx-auto max-w-7xl px-4 py-6 md:px-8 md:py-10">
+
+    <!-- ─── Header ─── -->
+    <header class="mb-6 rounded-2xl border border-slate-200/70 bg-white/85 px-5 py-3 shadow-soft backdrop-blur">
+      <div class="flex flex-wrap items-center gap-3">
+        <button id="sidebar-toggle" class="lg:hidden inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-medium text-slate-700 hover:border-sky-300 hover:text-sky-700">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          메뉴
+        </button>
+        <a href="#home" class="inline-flex items-center shrink-0">
+          <img src="blueverse_logo_h.png" alt="Blue Verse" class="h-6" />
+        </a>
+        <div class="hidden sm:block ml-auto text-right">
+          <p class="text-sm font-semibold tracking-[0.04em] text-sky-700/90">React Native 기반 글로벌 팬덤 플랫폼 개발</p>
+          <p class="text-xs text-slate-400">프로젝트 제안서</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid gap-6 lg:grid-cols-[280px_minmax(0,1fr)]">
+
+      <!-- ─── Sidebar ─── -->
+      <div id="sidebar-backdrop" class="fixed inset-0 bg-black/30 z-30 lg:hidden" onclick="closeSidebar()"></div>
+      <aside id="sidebar" class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-soft backdrop-blur lg:sticky lg:top-6 lg:h-[calc(100vh-4rem)] lg:overflow-auto">
+        <nav id="nav" class="space-y-1">
+          <a href="#home" data-page="home" class="nav-link block rounded-xl border px-3 py-2 text-sm border-sky-200 bg-sky-50 font-medium text-sky-700">홈</a>
+          <div class="my-3 border-t border-slate-200"></div>
+          <p class="mb-2 mt-1 px-1 text-sm font-semibold tracking-[0.14em] text-slate-400">제안서</p>
+          <a href="#overview" data-page="overview" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">프로젝트 소개</a>
+          <a href="#estimate" data-page="estimate" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">견적서</a>
+          <a href="#manday" data-page="manday" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">공수계산서</a>
+          <a href="#prd" data-page="prd" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">PRD</a>
+          <div class="my-3 border-t border-slate-200"></div>
+          <p class="mb-2 mt-1 px-1 text-sm font-semibold tracking-[0.14em] text-slate-400">일정 & 경험</p>
+          <a href="#timeline" data-page="timeline" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">일정 제안</a>
+          <a href="#portfolio" data-page="portfolio" class="nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900">유사 프로젝트 경험</a>
+        </nav>
+      </aside>
+
+      <!-- ─── Main Content ─── -->
+      <main class="min-w-0">
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: Home -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-home" class="page-section active space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-6 shadow-soft backdrop-blur md:p-8">
+            <p class="mb-2 text-xs font-semibold tracking-[0.2em] text-sky-700/80">프로젝트 제안서</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">React Native 기반 글로벌 팬덤 플랫폼 개발</h1>
+            <p class="mt-3 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">팬덤의 연대와 성취 중심의 글로벌 생태계를 구현하는 시네마틱 팬덤 플랫폼 MVP를 React Native Expo + Firebase 기반으로 개발합니다. 센서 기반 활동 트래킹, 3D 행성 렌더링, 실시간 이벤트 시스템, 크라우드 펀딩 등 유사 프로젝트 수행 경험을 바탕으로 효율적으로 진행합니다.</p>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <span class="inline-flex rounded-full border border-sky-200 bg-sky-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-sky-700">27,000,000원</span>
+              <span class="inline-flex rounded-full border border-sky-200 bg-sky-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-sky-700">120일 (MVP 90일 + 확장 30일)</span>
+              <span class="inline-flex rounded-full border border-amber-200 bg-amber-100 px-2.5 py-1 text-sm font-semibold tracking-[0.12em] text-amber-700">모바일 앱 · 커뮤니티 · 게임·리워드</span>
+              <a href="https://www.wishket.com/project/153378/" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-sm font-medium text-slate-500 transition hover:border-sky-300 hover:text-sky-700">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                원본 공고
+              </a>
+              <a href="https://www.wishket.com/partners/p/blueverse1/portfolio/" target="_blank" rel="noopener noreferrer"
+                 class="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-sm font-medium text-sky-700 transition hover:border-sky-400 hover:bg-sky-100">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                위시켓 포트폴리오
+              </a>
+            </div>
+          </div>
+
+          <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <a href="#overview" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">소개</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">프로젝트 소개</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">프로젝트 분석, 핵심 요구사항 정리, 제안 포인트</p>
+            </a>
+            <a href="#estimate" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">비용</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">견적서</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">항목별 비용 산출 근거 및 상세 견적</p>
+            </a>
+            <a href="#manday" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">공수</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">공수계산서</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">기능별 개발 공수(man-day) 산출 내역</p>
+            </a>
+            <a href="#prd" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">기획</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">PRD</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">기능 요구사항 정의서, 사용자 스토리, 기술 제약</p>
+            </a>
+            <a href="#timeline" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">일정</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">일정 제안</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">2단계 납품 전략: MVP 90일 + 확장 30일</p>
+            </a>
+            <a href="#portfolio" class="group rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-amber-100 text-amber-700 border-amber-200">경험</div>
+              <h2 class="text-lg font-semibold tracking-tight text-slate-900 group-hover:text-sky-700">유사 프로젝트 경험</h2>
+              <p class="mt-2 text-sm leading-7 text-slate-600">게이미피케이션, Firebase, React Native 수행 실적</p>
+            </a>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">13+</p>
+              <p class="mt-1 text-sm text-slate-500">완료 프로젝트</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">7년+</p>
+              <p class="mt-1 text-sm text-slate-500">개발 경험</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">100%</p>
+              <p class="mt-1 text-sm text-slate-500">참여율</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">98 M/D</p>
+              <p class="mt-1 text-sm text-slate-500">투입 공수</p>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-sky-200/70 bg-gradient-to-br from-sky-50 to-brand-50 p-6 text-center shadow-soft md:p-10">
+            <h2 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">함께 만들어 가겠습니다</h2>
+            <p class="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">각 메뉴를 클릭하시면 상세 내용을 확인하실 수 있습니다.</p>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: 프로젝트 소개 (Overview) -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-overview" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>프로젝트 소개</h1>
+              <blockquote>팬덤의 연대와 성취 중심의 글로벌 생태계를 구현하는 시네마틱 팬덤 플랫폼 MVP를 React Native Expo + Firebase 기반으로 개발합니다.</blockquote>
+
+              <h2>프로젝트 개요</h2>
+              <table>
+                <tr><th>항목</th><th>내용</th></tr>
+                <tr><td>프로젝트명</td><td><a href="https://www.wishket.com/project/153378/" target="_blank" rel="noopener noreferrer" class="text-sky-700 underline decoration-sky-300 hover:decoration-sky-500">React Native 기반 글로벌 팬덤 플랫폼 개발</a></td></tr>
+                <tr><td>카테고리</td><td>모바일 앱 · 커뮤니티·SNS · 게임·리워드</td></tr>
+                <tr><td>제안 금액</td><td>27,000,000원 (VAT 별도)</td></tr>
+                <tr><td>제안 기간</td><td>120일 (Phase 1 MVP 90일 + Phase 2 확장 30일)</td></tr>
+                <tr><td>핵심 기술</td><td>React Native Expo, TypeScript, Firebase (Firestore, Auth, Functions), Three.js, Health API, YouTube IFrame API, AdMob, IAP</td></tr>
+              </table>
+
+              <h2>핵심 요구사항 분석</h2>
+              <ul>
+                <li><strong>Cinematic & Non-Verbal UI</strong> — 텍스트 의존도 10% 미만, 시각적 애니메이션·게이지·햅틱 피드백 중심의 몰입형 UX</li>
+                <li><strong>3D Galaxy 뷰</strong> — 아티스트별 행성이 3D 궤도를 도는 메인 화면, 실시간 FPI 지수에 따라 크기·텍스처 가변</li>
+                <li><strong>POP 토큰 이코노미</strong> — 걷기(Health API) + YouTube 스밍으로 POP 획득, Zap 부스터로 행성 성장, 이클립스 방어전</li>
+                <li><strong>크라우드 펀딩 (Archive)</strong> — 팬 주도 서포트 캠페인 개설, 목표 미달 시 100% 자동 환불, 결과 보고 공유</li>
+                <li><strong>현상금 게시판 (K-Inside)</strong> — POP 기반 신뢰 소통, 채택 시 POP 즉시 전송</li>
+                <li><strong>진화형 디지털 신분증</strong> — 기여도에 따라 유리→황금→심연으로 실시간 진화하는 카드 UI</li>
+                <li><strong>수익화</strong> — No-Force 광고 정책(자발적 리워드 광고), 프리미엄 구독, 글로벌 부스트 앰플</li>
+                <li><strong>어뷰징 방지</strong> — YouTube 90% 이상 시청 검증, 포그라운드 체크, 일일 시청 횟수 제한</li>
+              </ul>
+
+              <h2>제안 포인트</h2>
+              <h3>1. 센서 기반 게이미피케이션 직접 구축 경험</h3>
+              <p>자체 프로덕트 DayStarter에서 ML Kit 얼굴 인식·조도 센서·배터리 센서 기반의 수면 인증 시스템과 듀얼 토큰 이코노미, 7단계 루트박스, Spine 2D 캐릭터 시스템을 직접 설계·구현한 경험이 있습니다. 본 프로젝트의 POP 이코노미, Health API 연동, 행동 기반 리워드 시스템과 높은 유사도를 가집니다.</p>
+
+              <h3>2. Firebase 풀스택 + 광고 수익화 경험</h3>
+              <p>Fortune App에서 Firebase(Auth, Analytics, Crashlytics, Remote Config) 기반 풀스택 앱을 3개월 내 iOS/Android 동시 출시하였으며, 자체 광고 SDK를 개발하여 앱 업데이트 없이 광고 전략을 변경할 수 있는 시스템을 구축한 경험이 있습니다.</p>
+
+              <h3>3. React Native 크로스플랫폼 실전 경험</h3>
+              <p>Pilates App에서 React Native 기반 iOS/Android/Web 3개 플랫폼을 4개월 만에 동시 출시한 경험이 있으며, 예약·결제·CRM·커뮤니티·채팅 등 8개 기능 모듈을 올인원으로 구현한 실적이 있습니다.</p>
+
+              <h3>4. 2단계 납품 전략으로 빠른 시장 검증</h3>
+              <p>Phase 1(90일)에서 Galaxy 뷰, Home(퀘스트/만보기/YouTube), My Page 등 핵심 3탭 MVP를 먼저 출시하여 시장 반응을 검증하고, Phase 2(30일)에서 Archive, K-Inside, 수익화 모듈을 확장하는 Lean 전략을 제안합니다.</p>
+
+              <h2>사용 기술 및 툴</h2>
+              <h3>개발 기술</h3>
+              <div class="flex flex-wrap gap-2 not-prose mb-4">
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">React Native</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Expo</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">TypeScript</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Firebase</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Firestore</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Cloud Functions</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Three.js</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">react-three-fiber</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Health API</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">YouTube IFrame API</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">Google AdMob</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">IAP</span>
+                <span class="rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-sm font-medium text-sky-700">FCM</span>
+              </div>
+              <h3>협업 및 커뮤니케이션</h3>
+              <div class="flex flex-wrap gap-2 not-prose">
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">GitHub</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Slack</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Zoom</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">Notion</span>
+                <span class="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-700">GitHub Issues</span>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: 견적서 (Estimate) -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-estimate" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>견적서</h1>
+              <blockquote>본 견적서는 프로젝트 요구사항 분석을 기반으로 산출되었습니다.</blockquote>
+
+              <h2>견적 요약</h2>
+              <table>
+                <tr><th>항목</th><th>내용</th></tr>
+                <tr><td>프로젝트명</td><td>React Native 기반 글로벌 팬덤 플랫폼 개발</td></tr>
+                <tr><td>제안 금액</td><td><strong>27,000,000원 (VAT 별도)</strong></td></tr>
+                <tr><td>제안 기간</td><td>120일 (Phase 1 MVP 90일 + Phase 2 확장 30일)</td></tr>
+                <tr><td>견적 유효기간</td><td>제안일로부터 30일</td></tr>
+              </table>
+
+              <h2>상세 견적 내역</h2>
+              <table>
+                <thead>
+                  <tr><th>구분</th><th>항목</th><th>공수</th><th>금액 (원)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>기획/설계</td><td>PRD 검토·보완, 기술 설계, Firestore 스키마</td><td>4 M/D</td><td>1,100,000</td></tr>
+                  <tr><td>프론트엔드</td><td>React Native 앱 개발 (5탭 + 3D + 마케팅 웹)</td><td>53 M/D</td><td>14,600,000</td></tr>
+                  <tr><td>백엔드</td><td>Firebase Functions + Firestore 설계·개발</td><td>34 M/D</td><td>9,400,000</td></tr>
+                  <tr><td>QA/배포</td><td>통합 테스트, iOS/Android 스토어 제출, 배포</td><td>7 M/D</td><td>1,900,000</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><th colspan="2">합계 (VAT 별도)</th><th>98 M/D</th><th>27,000,000</th></tr>
+                </tfoot>
+              </table>
+
+              <h2>단계별 비용 배분</h2>
+              <table>
+                <thead>
+                  <tr><th>단계</th><th>기간</th><th>공수</th><th>금액 (원)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td><strong>Phase 1: MVP</strong></td><td>Day 1~90 (90일)</td><td>60 M/D</td><td>16,500,000</td></tr>
+                  <tr><td><strong>Phase 2: 확장</strong></td><td>Day 91~120 (30일)</td><td>38 M/D</td><td>10,500,000</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><th colspan="2">합계</th><th>98 M/D</th><th>27,000,000</th></tr>
+                </tfoot>
+              </table>
+
+              <h2>산정 근거</h2>
+              <ul>
+                <li>유사 프로젝트(게이미피케이션 앱, Firebase 풀스택, React Native 크로스플랫폼) 수행 경험을 기반으로 효율적 개발 가능</li>
+                <li>클라이언트가 제공하는 상세 PRD, React/Tailwind 디자인 코드, 3D 소스를 활용하여 기획·디자인 공수 절감</li>
+                <li>Firebase 서버리스 아키텍처로 인프라 구축 공수 최소화</li>
+                <li>2단계 납품 전략으로 리스크 분산 및 비용 효율성 확보</li>
+              </ul>
+
+              <h2>포함 사항</h2>
+              <ul>
+                <li>소스 코드 전체 이관 (GitHub 100% 소유권 이전)</li>
+                <li>기술 아키텍처 문서 및 DB 구조도</li>
+                <li>정식 런칭 후 3개월간 크리티컬 버그 무상 수정 보장</li>
+                <li>iOS/Android 스토어 등록 자료 및 배포</li>
+                <li>Firebase 프로젝트 세팅 및 소유권 이전</li>
+              </ul>
+
+              <h2>불포함 사항</h2>
+              <ul>
+                <li>서버 호스팅 비용 (Firebase 사용량 기반 과금)</li>
+                <li>Apple Developer / Google Play 개발자 계정 비용</li>
+                <li>외부 유료 API 사용 비용 (YouTube API, AdMob 등은 무료)</li>
+                <li>다국어 번역 비용 (i18n 구조만 준비)</li>
+                <li>하자 보수 기간(3개월) 이후 유지보수</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: 공수계산서 (Man-day) -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-manday" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>공수계산서</h1>
+              <blockquote>기능별 개발 공수(Man-Day)를 산출하여 일정과 비용의 근거를 제시합니다.</blockquote>
+
+              <h2>공수 요약</h2>
+              <table>
+                <tr><th>구분</th><th>공수 (M/D)</th><th>비율</th></tr>
+                <tr><td>기획/설계</td><td>4 M/D</td><td>4%</td></tr>
+                <tr><td>프론트엔드</td><td>53 M/D</td><td>54%</td></tr>
+                <tr><td>백엔드</td><td>34 M/D</td><td>35%</td></tr>
+                <tr><td>QA/배포</td><td>7 M/D</td><td>7%</td></tr>
+                <tr><th>합계</th><th>98 M/D</th><th>100%</th></tr>
+              </table>
+
+              <h2>기능별 상세 공수</h2>
+              <table>
+                <thead>
+                  <tr><th>기능</th><th>세부 작업</th><th>담당</th><th>M/D</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td rowspan="2"><strong>기획/설계</strong></td><td>PRD 검토·보완, 기술 설계서 작성</td><td>설계</td><td>2</td></tr>
+                  <tr><td>Firestore 스키마 설계, API 명세서</td><td>설계</td><td>2</td></tr>
+
+                  <tr><td rowspan="2"><strong>Galaxy 3D 뷰</strong></td><td>3D 행성 렌더링, 궤도 애니메이션, 텍스처 가변</td><td>FE</td><td>10</td></tr>
+                  <tr><td>FPI 실시간 연동, 소셜 프루프 배너</td><td>FE+BE</td><td>4</td></tr>
+
+                  <tr><td><strong>이클립스 이벤트</strong></td><td>위기 발생 스케줄러, 방어 메커니즘, 경고 애니메이션</td><td>FE+BE</td><td>8</td></tr>
+
+                  <tr><td rowspan="4"><strong>Home 탭</strong></td><td>Today's Quest UI, 출석 체크</td><td>FE</td><td>3</td></tr>
+                  <tr><td>Health API 만보기 백그라운드 연동</td><td>FE+BE</td><td>5</td></tr>
+                  <tr><td>YouTube 스밍 트래킹 + 어뷰징 방지</td><td>FE+BE</td><td>8</td></tr>
+                  <tr><td>AI Daily Briefing 카드</td><td>FE+BE</td><td>3</td></tr>
+
+                  <tr><td><strong>Archive 탭</strong></td><td>크라우드 펀딩 캠페인 CRUD, 자동 환불, 결과 보고</td><td>FE+BE</td><td>10</td></tr>
+
+                  <tr><td><strong>K-Inside 탭</strong></td><td>현상금 Q&A 게시판, POP 전송 로직</td><td>FE+BE</td><td>6</td></tr>
+
+                  <tr><td><strong>My Page</strong></td><td>진화형 ID 카드 (재질 진화 애니메이션), 통계 대시보드</td><td>FE</td><td>8</td></tr>
+
+                  <tr><td><strong>POP 경제</strong></td><td>획득/소비/전송 로직, Firestore Security Rules</td><td>BE</td><td>6</td></tr>
+
+                  <tr><td><strong>인증/공통</strong></td><td>Firebase Auth, 소셜 로그인, 온보딩 플로우</td><td>FE+BE</td><td>5</td></tr>
+
+                  <tr><td><strong>수익화</strong></td><td>AdMob 리워드 광고, IAP 인앱 결제, 프리미엄 구독</td><td>FE+BE</td><td>5</td></tr>
+
+                  <tr><td><strong>마케팅 웹</strong></td><td>읽기 전용 모바일 웹 (Next.js/React)</td><td>FE</td><td>4</td></tr>
+
+                  <tr><td><strong>알림</strong></td><td>FCM 푸시 알림 시스템</td><td>FE+BE</td><td>2</td></tr>
+
+                  <tr><td><strong>QA/배포</strong></td><td>통합 테스트, 성능 최적화, 스토어 제출</td><td>QA</td><td>7</td></tr>
+                </tbody>
+                <tfoot>
+                  <tr><th colspan="3">합계</th><th>98</th></tr>
+                </tfoot>
+              </table>
+
+              <h2>산정 기준</h2>
+              <ul>
+                <li>1 M/D = 8시간 기준 (1인 1일 작업량)</li>
+                <li>주 5일 근무 기준</li>
+                <li>버퍼 10~15% 포함</li>
+                <li>유사 프로젝트 수행 경험 기반 효율적 개발</li>
+                <li>클라이언트 제공 자료(PRD, 디자인 코드, 3D 소스) 활용으로 기획·디자인 공수 절감 반영</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: PRD -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-prd" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>PRD (Product Requirements Document)</h1>
+              <blockquote>프로젝트 요구사항을 정의하고 기능 범위를 명확히 합니다.</blockquote>
+
+              <h2>1. 프로젝트 배경 및 목적</h2>
+              <p>단순 노동형 덕질을 넘어, 팬덤의 연대와 위기 극복을 통한 '성취' 중심의 글로벌 생태계를 구현하는 차세대 시네마틱 글로벌 팬덤 플랫폼의 MVP를 개발합니다. 클라이언트가 제공하는 상세 PRD(10개 이상 섹션)와 React/Tailwind 디자인 코드, 3D 개발 소스를 기반으로 기술 구현에 집중하여 빠른 시장 검증(Lean)을 목표로 합니다.</p>
+              <p><strong>핵심 목표:</strong> 전 세계 유저가 직관적으로 소통하고 몰입할 수 있도록 시각적 애니메이션, 게이지, 햅틱 피드백을 활용한 Cinematic &amp; Non-Verbal UI를 구현합니다.</p>
+
+              <h2>2. 사용자 정의</h2>
+              <table>
+                <thead>
+                  <tr><th>사용자 유형</th><th>설명</th><th>주요 기능</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>일반 팬 유저</td><td>아티스트를 응원하는 글로벌 팬</td><td>POP 획득(걷기/스밍), Zap 부스팅, 퀘스트, 펀딩 참여, Q&A</td></tr>
+                  <tr><td>서포트 주최자</td><td>팬덤 활동을 조직하는 리더</td><td>Archive 캠페인 개설·운영, 결과 보고 공유</td></tr>
+                  <tr><td>시스템 관리자</td><td>플랫폼 운영 관리</td><td>이클립스 이벤트 관리, 어뷰징 모니터링, 컨텐츠 관리</td></tr>
+                </tbody>
+              </table>
+
+              <h2>3. 기능 요구사항</h2>
+
+              <h3>3.1 사용자 인증 (Phase 1)</h3>
+              <ul>
+                <li><strong>[필수]</strong> Firebase Auth 기반 이메일/비밀번호 회원가입 및 로그인</li>
+                <li><strong>[필수]</strong> 소셜 로그인 (Google, Apple)</li>
+                <li><strong>[필수]</strong> 온보딩 플로우 (아티스트 선택, 프로필 설정)</li>
+              </ul>
+
+              <h3>3.2 Galaxy &amp; Social Proof — 메인 화면 (Phase 1)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 3D 은하계 뷰: 아티스트별 행성이 궤도를 도는 렌더링 (클라이언트 3D 소스 활용)</li>
+                <li><strong>[필수]</strong> 실시간 FPI 지수에 따라 행성 크기·표면 텍스처(금속, 보석 등) 가변</li>
+                <li><strong>[필수]</strong> 이클립스 이벤트: 붉은 경고광 + 행성 축소 위기 자동 발생</li>
+                <li><strong>[필수]</strong> 라이브 소셜 프루프: 슈퍼 부스트 시 섬광 효과 + 공지 배너 실시간 노출</li>
+              </ul>
+
+              <h3>3.3 Home — 활동 센터 (Phase 1)</h3>
+              <ul>
+                <li><strong>[필수]</strong> Today's Quest: 만보기 미션, 출석 체크, YouTube 음원 스밍 미션</li>
+                <li><strong>[필수]</strong> Health API 연동: OS 수준 걸음 수 백그라운드 트래킹</li>
+                <li><strong>[필수]</strong> YouTube IFrame API: 시청 시간 트래킹, 90% 이상 시청 시 리워드, 포그라운드 체크</li>
+                <li><strong>[Phase 2]</strong> AI Daily Briefing: 글로벌 팬덤 뉴스 카드 요약</li>
+                <li><strong>[Phase 2]</strong> 긴급 돌발 퀘스트: 타임어택 미션</li>
+              </ul>
+
+              <h3>3.4 Archive — 팬덤 펀딩 (Phase 2)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 팬 주도 서포트 캠페인 개설 (전광판, 커피차 등)</li>
+                <li><strong>[필수]</strong> D-Day까지 목표 미달성 시 100% 자동 환불</li>
+                <li><strong>[필수]</strong> 성공 시 결과 사진·소감 등록 및 전체 팬덤 공유</li>
+              </ul>
+
+              <h3>3.5 K-Inside — 지식인 게시판 (Phase 2)</h3>
+              <ul>
+                <li><strong>[필수]</strong> POP 현상금 질문 등록</li>
+                <li><strong>[필수]</strong> 답변 채택 시 POP 즉시 전송</li>
+              </ul>
+
+              <h3>3.6 My Page — 진화형 디지털 신분증 (Phase 1)</h3>
+              <ul>
+                <li><strong>[필수]</strong> Evolutionary ID Card: 유리(Glass) → 황금(Gold) → 심연(Obsidian) 실시간 진화</li>
+                <li><strong>[필수]</strong> 통계 시각화: 누적 걸음 수, 참여 캠페인 수, 총 기여 POP</li>
+              </ul>
+
+              <h3>3.7 수익화 (Phase 2)</h3>
+              <ul>
+                <li><strong>[필수]</strong> AdMob 리워드 광고: 퀘스트 완료 시 자발적 시청 → 3배 보상, 일일 횟수 제한</li>
+                <li><strong>[필수]</strong> 프리미엄 구독: 광고 제거 월간 정기 구독</li>
+                <li><strong>[필수]</strong> 글로벌 부스트 앰플: 전체 팬덤 POP 획득량 1.5배 증가 (1시간)</li>
+              </ul>
+
+              <h3>3.8 마케팅 웹 (Phase 2)</h3>
+              <ul>
+                <li><strong>[필수]</strong> 읽기 전용 모바일 웹: 앱 소개, Galaxy 뷰 미리보기, 앱 다운로드 유도</li>
+              </ul>
+
+              <h2>4. 비기능 요구사항</h2>
+              <table>
+                <thead>
+                  <tr><th>항목</th><th>요구사항</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>성능</td><td>Firestore 실시간 데이터 동기화 1초 이내, 3D 렌더링 60fps 목표</td></tr>
+                  <tr><td>보안</td><td>Firestore Security Rules, IAP 영수증 서버 검증, YouTube 어뷰징 방지</td></tr>
+                  <tr><td>확장성</td><td>Firestore 수평 확장, Cloud Functions auto-scaling</td></tr>
+                  <tr><td>접근성</td><td>Cinematic UI 원칙: 텍스트 의존도 10% 미만, 시각적·촉각적 피드백 중심</td></tr>
+                  <tr><td>국제화</td><td>글로벌 확장 대비 i18n 구조 준비 (다국어 번역은 별도)</td></tr>
+                </tbody>
+              </table>
+
+              <h2>5. 기술 제약사항</h2>
+              <ul>
+                <li>React Native Expo 환경 (EAS Build) — 네이티브 모듈 사용 시 config plugin 또는 development build 필요</li>
+                <li>Firebase 생태계 (Firestore, Auth, Functions, FCM, Analytics) — 서버리스 아키텍처</li>
+                <li>클라이언트 제공 3D 소스 활용 — Three.js / react-three-fiber / expo-gl 통합</li>
+                <li>클라이언트 제공 React/Tailwind 디자인 코드 → React Native StyleSheet/NativeWind 변환</li>
+                <li>YouTube API ToS 준수 — IFrame API만 사용, 다운로드/캐시 금지</li>
+                <li>Health API — Apple HealthKit (iOS), Google Health Connect (Android) 네이티브 연동</li>
+              </ul>
+
+              <h2>6. 범위 외 사항 (Out of Scope)</h2>
+              <ul>
+                <li>웹 어드민 대시보드 (Firebase Console로 임시 대체)</li>
+                <li>다국어 번역 (i18n 구조만 준비, 번역은 클라이언트 측)</li>
+                <li>결제 PG 연동 (스토어 IAP만 사용)</li>
+                <li>아티스트/기획사 관리 기능 (MVP 이후)</li>
+                <li>데이터 분석/BI 대시보드 (Firebase Analytics로 대체)</li>
+                <li>웹소켓 기반 실시간 채팅 (MVP 범위 외)</li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: 일정 제안 (Timeline) -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-timeline" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>일정 제안</h1>
+              <blockquote>총 120일 (Phase 1 MVP 90일 + Phase 2 확장 30일) 기준 단계별 마일스톤 및 산출물을 제안합니다.</blockquote>
+
+              <h2>전체 일정 요약</h2>
+              <table>
+                <thead>
+                  <tr><th>단계</th><th>기간</th><th>주요 산출물</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Phase 1-1: 기획/설계</td><td>Day 1~10 (10일)</td><td>기술 설계서, Firestore 스키마, API 명세서</td></tr>
+                  <tr><td>Phase 1-2: 코어 개발</td><td>Day 11~60 (50일)</td><td>Galaxy 3D, Home, My Page, POP 경제, 인증</td></tr>
+                  <tr><td>Phase 1-3: MVP QA/배포</td><td>Day 61~80 (20일)</td><td>테스트 리포트, 스토어 제출 자료</td></tr>
+                  <tr><td>Phase 1-4: MVP 출시</td><td>Day 81~90 (10일)</td><td>iOS/Android 앱 출시, Phase 1 소스코드</td></tr>
+                  <tr><td>Phase 2-1: 확장 개발</td><td>Day 91~115 (25일)</td><td>Archive, K-Inside, AdMob, IAP, 마케팅 웹</td></tr>
+                  <tr><td>Phase 2-2: 최종 납품</td><td>Day 116~120 (5일)</td><td>전체 소스코드, 기술 문서, DB 구조도</td></tr>
+                </tbody>
+              </table>
+            </article>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <h2 class="mb-4 text-sm font-semibold tracking-[0.14em] text-slate-500">상세 타임라인</h2>
+            <div class="timeline">
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1-1</p>
+                <h4 class="text-base font-semibold text-slate-900">기획 및 설계</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 1~10</p>
+                <p class="text-sm leading-7 text-slate-600">기존 PRD 검토·보완, 기술 설계 확정, Firestore 데이터 모델 설계, API 명세서 작성, 3D 소스 분석 및 RN 통합 방안 수립</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 기술 설계서, Firestore 스키마, API 명세서</li>
+                  <li>클라이언트 내부 PM/디자이너와 킥오프 미팅</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1-2 — Sprint 1</p>
+                <h4 class="text-base font-semibold text-slate-900">코어 인프라 + Galaxy 3D 뷰</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 11~25</p>
+                <p class="text-sm leading-7 text-slate-600">Expo 프로젝트 세팅, Firebase 연동, 인증 플로우, Galaxy 3D 행성 렌더링(react-three-fiber), POP 경제 기본 구조</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 인증 완료 + Galaxy 3D 뷰 프로토타입</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1-2 — Sprint 2</p>
+                <h4 class="text-base font-semibold text-slate-900">Home 탭 (퀘스트 + 센서 연동)</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 26~40</p>
+                <p class="text-sm leading-7 text-slate-600">Today's Quest UI, Health API 만보기 백그라운드 연동, YouTube IFrame API 스밍 트래킹 + 어뷰징 방지 로직</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: Home 탭 완성, 만보기·YouTube 미션 작동</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1-2 — Sprint 3</p>
+                <h4 class="text-base font-semibold text-slate-900">My Page + 이클립스 이벤트</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 41~60</p>
+                <p class="text-sm leading-7 text-slate-600">진화형 ID 카드(재질 진화 애니메이션), 통계 대시보드, 이클립스 이벤트 기본 시스템, 푸시 알림</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 핵심 3탭(Galaxy, Home, My Page) 완성</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 1-3</p>
+                <h4 class="text-base font-semibold text-slate-900">MVP QA 및 배포 준비</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 61~80</p>
+                <p class="text-sm leading-7 text-slate-600">통합 테스트, 성능 최적화(3D 렌더링, 실시간 동기화), iOS/Android 베타 테스트, 스토어 제출 준비</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 테스트 리포트, TestFlight/Internal Testing 배포</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-emerald-700">MILESTONE — MVP 출시</p>
+                <h4 class="text-base font-semibold text-slate-900">Phase 1 MVP 납품</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 81~90</p>
+                <p class="text-sm leading-7 text-slate-600">스토어 심사 대응, 핫픽스, Phase 1 MVP 납품 및 검수</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: iOS/Android 앱 출시 (Galaxy, Home, My Page)</li>
+                  <li>시장 검증 시작 가능</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-sky-700">PHASE 2-1</p>
+                <h4 class="text-base font-semibold text-slate-900">확장 기능 개발</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 91~115</p>
+                <p class="text-sm leading-7 text-slate-600">Archive 탭(크라우드 펀딩), K-Inside 탭(현상금 게시판), AdMob + IAP 수익화, 마케팅 웹, AI Daily Briefing, 이클립스 고도화</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 전체 5탭 + 수익화 모듈 완성</li>
+                </ul>
+              </div>
+
+              <div class="timeline-item">
+                <p class="text-sm font-semibold tracking-[0.14em] text-emerald-700">MILESTONE — 최종 납품</p>
+                <h4 class="text-base font-semibold text-slate-900">최종 QA 및 인수인계</h4>
+                <p class="text-sm font-semibold text-amber-600">Day 116~120</p>
+                <p class="text-sm leading-7 text-slate-600">전체 기능 통합 테스트, 스토어 업데이트, 기술 아키텍처 문서 + DB 구조도 인수인계</p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-slate-500">
+                  <li>산출물: 최종 소스코드(GitHub), 기술 문서, DB 구조도</li>
+                  <li>하자보수 3개월 시작</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h2>마일스톤 체크포인트</h2>
+              <table>
+                <thead>
+                  <tr><th>마일스톤</th><th>시점</th><th>검수 기준</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>M1: 설계 완료</td><td>Day 10</td><td>기술 설계서, Firestore 스키마, API 명세서 승인</td></tr>
+                  <tr><td>M2: 코어 프로토타입</td><td>Day 25</td><td>Galaxy 3D 뷰 + 인증 플로우 데모</td></tr>
+                  <tr><td>M3: Home 탭 완성</td><td>Day 40</td><td>만보기·YouTube 미션 정상 작동</td></tr>
+                  <tr><td>M4: MVP 3탭 완성</td><td>Day 60</td><td>Galaxy, Home, My Page 전체 기능 작동</td></tr>
+                  <tr><td>M5: MVP 출시</td><td>Day 90</td><td>iOS/Android 스토어 출시 완료</td></tr>
+                  <tr><td>M6: 최종 납품</td><td>Day 120</td><td>전체 5탭 + 수익화 + 기술 문서 인수인계</td></tr>
+                </tbody>
+              </table>
+
+              <h2>커뮤니케이션 계획</h2>
+              <table>
+                <tr><th>항목</th><th>방식</th><th>주기</th></tr>
+                <tr><td>일일 진행 공유</td><td>Slack / 카카오톡</td><td>매일</td></tr>
+                <tr><td>주간 미팅</td><td>Zoom / Google Meet</td><td>주 1회</td></tr>
+                <tr><td>마일스톤 리뷰</td><td>화면 공유 + 문서</td><td>단계 완료 시</td></tr>
+                <tr><td>이슈 트래킹</td><td>GitHub Issues</td><td>상시</td></tr>
+              </table>
+            </article>
+          </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════ -->
+        <!-- PAGE: 포트폴리오 (Portfolio) -->
+        <!-- ═══════════════════════════════════════════════ -->
+        <div id="page-portfolio" class="page-section space-y-6">
+          <div class="rounded-2xl border border-slate-200/70 bg-white/95 p-5 shadow-soft backdrop-blur md:p-8">
+            <article class="doc-content">
+              <h1>유사 프로젝트 경험</h1>
+              <blockquote>본 프로젝트와 유사한 기능/기술 스택을 활용한 수행 경험을 소개합니다.</blockquote>
+            </article>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">13+</p>
+              <p class="mt-1 text-sm text-slate-500">완료 프로젝트</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">7년+</p>
+              <p class="mt-1 text-sm text-slate-500">개발 경험</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">100%</p>
+              <p class="mt-1 text-sm text-slate-500">참여율</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-4 text-center shadow-soft backdrop-blur">
+              <p class="text-2xl font-bold text-sky-700">98 M/D</p>
+              <p class="mt-1 text-sm text-slate-500">투입 공수</p>
+            </div>
+          </div>
+
+          <!-- Portfolio Card 1: DayStarter -->
+          <div class="space-y-4">
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2C 앱 · 게이미피케이션</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">DayStarter — Sleep-to-Earn 게이미피케이션 앱</h3>
+              <p class="mt-1 text-sm text-slate-400">자체 프로덕트 · 2022.06~현재 (3년+ 운영)</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>센서 기반 수면 인증 + 게이미피케이션 + 토큰 이코노미를 결합한 알람 앱. ML Kit 얼굴 인식, 조도 센서, 배터리 충전 상태로 실제 수면을 검증하고, 조합형 캐릭터(Deimo) 시스템, 루트 박스, 퀘스트, 리그 랭킹 등 모바일 게임 수준의 리텐션 메커니즘 구현. DSP/DST 듀얼 토큰 이코노미와 P2P 마켓플레이스 운영.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>멀티 센서 수면 인증 (ML Kit, 조도, 배터리)</li>
+                  <li>7단계 루트박스 이코노미</li>
+                  <li>Spine 2D 스켈레톤 애니메이션 캐릭터</li>
+                  <li>듀얼 토큰(DSP/DST) P2P 마켓플레이스</li>
+                  <li>48개 화면, 37개 데이터 모델, AdMob 광고 수익화</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li><strong>센서 기반 활동 트래킹</strong> — 수면 센서 인증 → Health API 만보기 연동 (동일한 OS 센서 백그라운드 연동 패턴)</li>
+                  <li><strong>토큰 이코노미</strong> — DSP/DST 듀얼 토큰 → POP 토큰 (획득/소비/전송 경제 시스템 직접 설계 경험)</li>
+                  <li><strong>게이미피케이션</strong> — 루트박스, 퀘스트, 리그 랭킹 → 이클립스 이벤트, Zap 부스팅, 진화형 ID</li>
+                  <li><strong>광고 수익화</strong> — AdMob 리워드 광고 직접 운영 경험</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Flutter</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">NestJS</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">PostgreSQL</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Firebase</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Spine 2D</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">ML Kit</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">AdMob</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Portfolio Card 2: Fortune App -->
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2C 앱 · Firebase 풀스택</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">Fortune App — 사주 기반 운세 앱</h3>
+              <p class="mt-1 text-sm text-slate-400">외주 프로젝트 · 2024.07~2024.09 (3개월)</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>사주(四柱) 기반 맞춤형 운세·행운의 번호·궁합 추천 모바일 앱. Firebase 풀스택 아키텍처로 3개월 만에 iOS/Android 동시 출시. 자체 광고 SDK 개발로 앱 업데이트 없이 광고 전략 변경 가능.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>Firebase Auth + Analytics + Crashlytics + Remote Config 풀스택</li>
+                  <li>포인트 & 데일리 체크인 리워드 시스템</li>
+                  <li>자체 광고 SDK (flutter_ads) 개발</li>
+                  <li>Clean Architecture + BLoC 패턴</li>
+                  <li>Google/Apple 소셜 로그인, 다국어(한/영)</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li><strong>Firebase 풀스택</strong> — Auth, Analytics, Remote Config 동일 스택</li>
+                  <li><strong>포인트/리워드 시스템</strong> — 데일리 체크인 + 포인트 → POP 획득 + 출석 체크</li>
+                  <li><strong>광고 수익화</strong> — 자체 광고 SDK 경험 → AdMob 리워드 광고 No-Force 정책</li>
+                  <li><strong>3개월 딜리버리</strong> — 기획~출시 3개월 풀패키지 납기 실적</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Flutter</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Firebase</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Node.js</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">BLoC</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Retrofit</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Figma</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Portfolio Card 3: Pilates App -->
+            <div class="rounded-2xl border border-slate-200/70 bg-white/90 p-5 shadow-soft backdrop-blur md:p-8">
+              <div class="mb-3 inline-flex rounded-full border px-2.5 py-1 text-sm font-semibold tracking-[0.12em] bg-sky-100 text-sky-700 border-sky-200">B2B2C 앱 · React Native</div>
+              <h3 class="text-lg font-semibold tracking-tight text-slate-900">Pilates App — 필라테스 프랜차이즈 관리 앱</h3>
+              <p class="mt-1 text-sm text-slate-400">외주 프로젝트 · 2019.09~2019.12 (4개월)</p>
+              <div class="mt-3 doc-content">
+                <h4>프로젝트 개요</h4>
+                <p>필라테스 센터의 예약·결제·회원관리·매출분석을 하나로 통합하는 올인원 관리 플랫폼. React Native로 Android/iOS/Web 3개 플랫폼 4개월 동시 출시. 센터 관리자·강사·회원 3종 사용자 역할 지원.</p>
+                <h4>핵심 기능</h4>
+                <ul>
+                  <li>React Native 기반 iOS/Android/Web 3-플랫폼 동시 출시</li>
+                  <li>8개 기능 모듈 (예약, 결제, CRM, 매출, 알림, 채팅, 챗봇, 커뮤니티)</li>
+                  <li>프랜차이즈 다지점 통합 관리</li>
+                  <li>실시간 채팅 (WebSocket)</li>
+                  <li>푸시 알림 (FCM/APNs)</li>
+                </ul>
+                <h4>본 프로젝트와의 유사점</h4>
+                <ul>
+                  <li><strong>React Native</strong> — 동일 프레임워크 실전 경험 (iOS/Android 동시 개발)</li>
+                  <li><strong>커뮤니티 기능</strong> — 강사-회원 소셜 플랫폼 → 팬덤 소셜 플랫폼</li>
+                  <li><strong>다중 사용자 역할</strong> — 관리자/강사/회원 → 팬/주최자/관리자</li>
+                  <li><strong>빠른 딜리버리</strong> — 4개월 3-플랫폼 동시 출시 실적</li>
+                </ul>
+                <h4>기술 스택</h4>
+                <div class="flex flex-wrap gap-1.5 not-prose">
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">React Native</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">React</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">Node.js</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">WebSocket</span>
+                  <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-sm text-slate-500">FCM</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="rounded-2xl border border-sky-200/70 bg-gradient-to-br from-sky-50 to-brand-50 p-6 text-center shadow-soft md:p-10">
+            <h2 class="text-xl font-bold tracking-tight text-slate-900 md:text-2xl">함께 만들어 가겠습니다</h2>
+            <p class="mx-auto mt-3 max-w-lg text-sm leading-7 text-slate-600">프로젝트에 대해 더 자세한 논의를 원하시면 미팅을 신청해 주세요.</p>
+            <a href="https://www.wishket.com/partners/p/blueverse1/portfolio/" target="_blank" rel="noopener noreferrer"
+               class="mt-5 inline-flex items-center gap-2 rounded-full border border-sky-300 bg-white px-5 py-2 text-sm font-semibold text-sky-700 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-400 hover:shadow-soft">
+              위시켓에서 Blue Verse 보기 <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+      </main>
+    </div>
+
+    <footer class="mt-10 border-t border-slate-200 pt-6 text-sm text-slate-500">
+      &copy; 2026 Blue Verse &middot; 본 제안서는 React Native 기반 글로벌 팬덤 플랫폼 개발 프로젝트를 위해 작성되었습니다.
+    </footer>
+  </div>
+
+  <!-- ─── SPA Router ─── -->
+  <script>
+    const pages = ['home', 'overview', 'estimate', 'manday', 'prd', 'timeline', 'portfolio'];
+
+    function navigate(pageId) {
+      if (!pages.includes(pageId)) pageId = 'home';
+      document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active');
+      document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.dataset.page === pageId) {
+          link.className = 'nav-link block rounded-xl border px-3 py-2 text-sm border-sky-200 bg-sky-50 font-medium text-sky-700';
+        } else {
+          link.className = 'nav-link block rounded-xl border border-transparent px-3 py-2 text-sm text-slate-600 hover:border-slate-200 hover:bg-slate-50 hover:text-slate-900';
+        }
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      closeSidebar();
+    }
+
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar-backdrop').classList.remove('open');
+    }
+
+    function handleHash() {
+      const hash = (location.hash || '#home').replace('#', '');
+      navigate(hash);
+    }
+    window.addEventListener('hashchange', handleHash);
+    window.addEventListener('DOMContentLoaded', handleHash);
+
+    document.getElementById('sidebar-toggle').addEventListener('click', function() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-backdrop').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>
