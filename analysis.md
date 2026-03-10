@@ -111,4 +111,33 @@ job:
 
 ## 6. 최종 산출물
 
-(8단계 완료 후 추가 예정)
+### 제안서 사이트 URL
+https://blue-verse.github.io/proposal-fandom-platform/
+
+### 지원 금액
+27,000,000원
+
+### 지원 기간
+120일
+
+### 클라이언트 질문 답변
+Q: 유사한 프로젝트를 수행한 경험이 있다면 무엇입니까?
+
+네, 본 프로젝트와 직접적으로 연관되는 3개의 프로젝트를 수행한 경험이 있습니다.
+
+1) DayStarter (Sleep-to-Earn 게이미피케이션 앱, 자체 프로덕트, 2022~현재)
+- 센서 기반 활동 검증(ML Kit 얼굴 인식, 조도 센서, 배터리 센서)과 듀얼 토큰 이코노미(DSP/DST), 7단계 루트박스, Spine 2D 캐릭터 시스템을 직접 설계·구현
+- 본 프로젝트의 POP 토큰 이코노미, Health API 만보기 연동, 이클립스 이벤트, AdMob 광고 수익화와 높은 구조적 유사도
+
+2) Fortune App (사주 기반 운세 앱, 외주, 2024.07~09, 3개월)
+- Firebase(Auth, Analytics, Crashlytics, Remote Config) 기반 풀스택 앱을 3개월 만에 iOS/Android 동시 출시
+- 포인트 & 데일리 체크인 리워드 시스템, 자체 광고 SDK 개발 경험
+
+3) Pilates App (필라테스 프랜차이즈 관리 앱, 외주, 2019.09~12, 4개월)
+- React Native 기반 iOS/Android/Web 3개 플랫폼 4개월 동시 출시
+- 예약·결제·CRM·커뮤니티·채팅 등 8개 기능 모듈 올인원 구현
+
+### 관련 포트폴리오 추천
+1. DayStarter — 센서 기반 게이미피케이션 + 토큰 이코노미 + AdMob
+2. Fortune App — Firebase 풀스택 + 포인트/리워드 + 광고 수익화
+3. Pilates App — React Native 크로스플랫폼 + 커뮤니티 + 멀티플랫폼 동시 출시
