@@ -112,7 +112,7 @@ job:
 ## 6. 최종 산출물
 
 ### 제안서 사이트 URL
-https://blue-verse.github.io/proposal-fandom-platform/
+https://proposal-fandom-platform.pages.dev/
 
 ### 지원 금액
 27,000,000원
