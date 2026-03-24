@@ -112,7 +112,7 @@ job:
 ## 6. 최종 산출물
 
 ### 제안서 사이트 URL
-https://proposal-fandom-platform.pages.dev/
+https://proposal-router.claude-ai-b27.workers.dev/proposal-fandom-platform/
 
 ### 지원 금액
 27,000,000원
